@@ -202,4 +202,53 @@ trait Trait_Method
 		return $options;
 	}
 
+
+   function text_horizontal($x, $y, $text, $max_width = 0,  $align = "left", $size = null,  $space = 0, $style = "", $family = "")
+   {
+
+		$length = mb_strlen($text);
+		if($length === 0) return;
+//		$this->SetFont(($family) ? $family : $this->family, $style, $size);
+
+		while($max_width > 0 && $size > 0)
+		{
+			$this->SetFontSize($size);
+			$width = $this->GetStringWidth($text) + $space * ($length - 1);
+			if ($width  < $max_width)
+			{
+				break;
+			}
+			$size--;
+		}
+
+		if ($max_width > 0)
+		{
+			switch ($align)
+			{
+			case "center":
+				$x += ($max_width - $width) /2;
+				break;
+			case "right":
+				$x += ($max_width - $width);
+				break;
+			}
+		}
+		$x0 = $x;
+
+		if ($space > 0) {
+			for($i = 0; $i < $length; $i++)
+			{
+				$char = mb_substr($text, $i, 1);
+				$this->Text($x, $y, $char);
+				$x += ($this->GetStringWidth($char) + $space);
+			}
+		}
+		else {
+			$this->Text($x, $y, $text);
+		}
+
+		return array($size, $x0);
+    }
+
+
 }

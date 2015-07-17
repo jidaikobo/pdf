@@ -14,11 +14,13 @@ trait Trait_FullWrap
 	{
 		if (!is_array($x))
 		{
-			return parent::Text($x, $y, $txt, $fstroke, $fclip, $ffill, $border, $ln, $align, $fill, $link, $stretch, $ignore_min_height, $calign, $valign, $rtloff);
+			parent::Text($x, $y, $txt, $fstroke, $fclip, $ffill, $border, $ln, $align, $fill, $link, $stretch, $ignore_min_height, $calign, $valign, $rtloff);
+			return $this;
 		}
 		else
 		{
 			$this->Txt($x);
+			return $this;
 		}
 	}
 
@@ -29,11 +31,13 @@ trait Trait_FullWrap
 	{
 		if (!is_array($w))
 		{
-			return parent::Cell($w, $h, $txt, $border, $ln, $align, $fill, $link, $stretch, $ignore_min_height, $calign, $valign);
+			parent::Cell($w, $h, $txt, $border, $ln, $align, $fill, $link, $stretch, $ignore_min_height, $calign, $valign);
+			return $this;
 		}
 		else
 		{
 			$this->Box($w);
+			return $this;
 		}
 	}
 
@@ -44,11 +48,13 @@ trait Trait_FullWrap
 	{
 		if (!is_array($x))
 		{
-			return parent::MultiCell($w, $h, $txt, $border, $align, $fill, $ln, $x, $y, $reseth, $stretch, $ishtml, $autopadding, $maxh, $valign, $fitcell);
+			parent::MultiCell($w, $h, $txt, $border, $align, $fill, $ln, $x, $y, $reseth, $stretch, $ishtml, $autopadding, $maxh, $valign, $fitcell);
+			return $this;
 		}
 		else
 		{
 			$this->MultiBox($x);
+			return $this;
 		}
 	}
 
