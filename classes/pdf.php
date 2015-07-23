@@ -15,7 +15,7 @@ include_once( dirname(dirname( __FILE__ )) . '/lib/tcpdf/config/lang/jpn.php' );
 include_once( dirname(dirname( __FILE__ )) . '/lib/tcpdf/tcpdf.php' );
 include_once( dirname(dirname( __FILE__ )) . '/lib/fpdi/fpdi.php' );
 
-class Pdf//<D-r><D-e> extends \FPDI
+class Pdf
 {
 	use \Pdf\Trait_Wrapper;
 	use \Pdf\Trait_Method;
@@ -220,23 +220,30 @@ class Pdf//<D-r><D-e> extends \FPDI
 	 */
 	public function __call($method, $arguments)
 	{
-		
 		// Get cameled method
 		$cameled_method = $this->underscore_to_camel($method);
 		
 		if (method_exists(static::$_pdf, $method))
 		{
 			$pdf = static::$_pdf;
-			
+
 			$return = call_user_func_array(array($pdf, $method), $arguments);
-			return ($return) ? $return : $this;
+			if ($return OR $return === 0) {
+				return $return;
+			} else {
+				return $this;
+			}
 		}
 		else if (method_exists($this->_pdf, $cameled_method))
 		{
 			$pdf = static::$_pdf;
 			
 			$return = call_user_func_array(array($pdf, $cameled_method), $arguments);
-			return ($return) ? $return : $this;
+			if ($return OR $return === 0) {
+				return $return;
+			} else {
+				return $this;
+			}
 		}
 		
 		// Generic getter / setter

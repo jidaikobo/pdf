@@ -85,6 +85,7 @@ trait Trait_Method
 			{
 				$this->drawTableLines($arg_values, $startY);
 				$this->addPage();
+				$this->setX($startX);
 				$startY = $this->getMargins()['top'];
 				$nextY = $this->TableBulk($object, $arg_values);
 			}

@@ -8,6 +8,9 @@ trait Trait_Wrapper
 	 */
 	public function Txt($options)
 	{
+		if (is_null(static::$_pdf)) return;
+		$pdf = static::$_pdf;
+
 		$options = static::boxWordBuffer($options);
 
 		if(isset($options['font_size']) && $options['font_size'] > 0)
@@ -36,7 +39,7 @@ trait Trait_Wrapper
 
 		$options = array_merge($defaults, $options);
 
-		return parent::Text(
+		return $pdf->Text(
 			$options['x'],
 			$options['y'],
 			$options['txt'],
@@ -62,6 +65,8 @@ trait Trait_Wrapper
 	 */
 	public function Box($options)
 	{
+		if (is_null(static::$_pdf)) return;
+		$pdf = static::$_pdf;
 		$options = static::boxWordBuffer($options);
 
 		if (isset($options['x']) and $options['x']) {
@@ -102,7 +107,7 @@ trait Trait_Wrapper
 
 		$options = array_merge($defaults, $options);
 
-		return parent::Cell(
+		return $pdf->Cell(
 			$options['w'],
 			$options['h'],
 			$options['txt'],
@@ -124,6 +129,9 @@ trait Trait_Wrapper
 	 */
 	public function MultiBox($options)
 	{
+		if (is_null(static::$_pdf)) return;
+		$pdf = static::$_pdf;
+
 		$options = static::boxWordBuffer($options);
 
 		if(isset($options['font_size']) && $options['font_size'] > 0)
@@ -165,7 +173,7 @@ trait Trait_Wrapper
 
 		$options = array_merge($defaults, $options);
 
-		return parent::MultiCell(
+		return $pdf->MultiCell(
 			$options['w'],
 			$options['h'],
 			$options['txt'],
