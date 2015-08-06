@@ -6,36 +6,93 @@ trait Trait_Method
 	/*
 	 * Bulk
 	 * @param Model or array $object
-	 * @param array $values
+	 * @param array $formats
+	 * 
 	 */
-	public function Bulk($object, $values)
+	public function Bulk($object, $formats)
 	{
-		foreach ($values as $key => $val)
+		foreach ($formats as $key => $format)
 		{
-			if ( !isset($val['fields']) ) continue;
+			$default_paddings = $this->getCellPaddings();
+			$this->setCellPaddings(
+				isset($format['padding_left']  ) ? $format['padding_left']   : $default_paddings['L'],
+				isset($format['padding_top']   ) ? $format['padding_top']    : $default_paddings['T'],
+				isset($format['padding_right'] ) ? $format['padding_right']  : $default_paddings['R'],
+				isset($format['padding_bottom']) ? $format['padding_bottom'] : $default_paddings['B']
+			);
 
-			$val['txt'] = '';
-			foreach($val['fields'] as $field_name)
+			if ( !isset($format['fields']) ) continue;
+
+			$format['txt'] = '';
+			foreach($format['fields'] as $field_name)
 			{
-				if (is_object($object) && isset($object->{$field_name}))
+
+				// field を元に, object を txt に変換
+				if (is_object($object))
 				{
-					$val['txt'] .= $object->{$field_name};
-				}
-				else if (is_object($object) && isset($object[$field_name]))
-				{
-					$val['txt'] .= $object[$field_name];
+					// リレーションの可能性有り
+					$related_str = false;
+					if (strpos($field_name, '.') !== false)
+					{
+						$related_name = substr($field_name, 0, strpos($field_name, '.'));
+						$related_field = substr($field_name, strpos($field_name, '.') +1);
+						isset($object->{$related_name}) &&
+						isset($object->{$related_name}->{$related_field}) &&
+						$related_str = $object->{$related_name}->{$related_field};
+					}
+
+					if ($related_str && is_string($related_str))
+					{
+						$format['txt'] .= $related_str;
+					} // ここまでリレーションの処理
+					else if (isset($object->{$field_name}))
+					{
+						$format['txt'] .= $object->{$field_name};
+					}
+					else if (isset($object[$field_name]))
+					{
+						$format['txt'] .= $object[$field_name];
+					}
+					else
+					{
+						$format['txt'] .= $field_name;
+					}
 				}
 				else
 				{
-					$val['txt'] .= $field_name;
+					$format['txt'] .= $field_name;
+				}
+
+				if ($format['ln_y'])
+				{
+					$format['y'] = $this->getY()+$format['margin_top'];
+				}
+				else
+				{
+					$format['y'] += $format['margin_top'];
+				}
+
+				if ($format['font_family'] == 'G')
+				{
+					$this->setFont('kozgopromedium');
+				}
+				else
+				{
+					$this->setFont('kozminproregular');
 				}
 			}
 
-			$this->MultiBox($val);
+			$this->MultiBox($format);
 
+			// padding 戻し
+			$this->setCellPaddings(
+				$default_paddings['L'],
+				$default_paddings['T'],
+				$default_paddings['R'],
+				$default_paddings['B']
+			);
 		}
 	}
-
 
 	/*
 	 * @param array $objects

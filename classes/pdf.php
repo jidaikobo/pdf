@@ -234,7 +234,7 @@ class Pdf
 				return $this;
 			}
 		}
-		else if (method_exists($this->_pdf, $cameled_method))
+		else if (method_exists(static::$_pdf, $cameled_method))
 		{
 			$pdf = static::$_pdf;
 			
