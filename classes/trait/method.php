@@ -63,22 +63,28 @@ trait Trait_Method
 					$format['txt'] .= $field_name;
 				}
 
-				if ($format['ln_y'])
+				if (isset($format['ln_y']))
 				{
-					$format['y'] = $this->getY()+$format['margin_top'];
+					if ($format['ln_y'])
+					{
+						$format['y'] = $this->getY()+$format['margin_top'];
+					}
+					else
+					{
+						$format['y'] += $format['margin_top'];
 				}
-				else
-				{
-					$format['y'] += $format['margin_top'];
 				}
 
-				if ($format['font_family'] == 'G')
+				if (isset($format['font_family']))
 				{
-					$this->setFont('kozgopromedium');
-				}
-				else
-				{
-					$this->setFont('kozminproregular');
+					if ($format['font_family'] == 'G')
+					{
+						$this->setFont('kozgopromedium');
+					}
+					else
+					{
+						$this->setFont('kozminproregular');
+					}
 				}
 			}
 
@@ -96,9 +102,9 @@ trait Trait_Method
 
 	/*
 	 * @param array $objects
-	 * @param array $values
+	 * @param array $formats
 	 */
-	public function Table($objects, $values)
+	public function Table($objects, $formats)
 	{
 		$startX = $this->getX();
 		$startY = $nextY = $this->getY();
@@ -108,61 +114,122 @@ trait Trait_Method
 			'ln' => 1,
 		);
 
-		if (!isset($values[0][0])) {
-			$values = array($values);
+		if (!isset($formats[0][0])) {
+			$formats = array($formats);
 		}
 
-		for ($i = 0; $i < count($values); $i++) {
-			$values_length = count($values[$i]);
+		for ($i = 0; $i < count($formats); $i++) {
+			$formats_length = count($formats[$i]);
 
-			for ($j = 0; $j < $values_length; $j++)
+			for ($j = 0; $j < $formats_length; $j++)
 			{
 				/*
-				if ($j == ($values_length -1))
+				if ($j == ($formats_length -1))
 				{
 					$defaults['ln'] = 1;
 				}
 				 */
-				$values[$i][$j] = array_merge($defaults, $values[$i][$j]);
+				$formats[$i][$j] = array_merge($defaults, $formats[$i][$j]);
 			}
-
 		}
 
-		$row_count = 0;
-		foreach ($objects as $key => $object)
+
+		// is_add_page の判定で使いたいので、key を詰める
+		$objects = array_values( $objects );
+
+		$rowspan_fields = array();
+		foreach ($objects as $object_key => $object)
 		{
-			// todo xの位置
+
 			$this->setXY($startX, $nextY);
-			// $values[0]['fields'][1] = $nextY;
+			// $formats[0]['fields'][1] = $nextY;
 
-			$arg_values = $values[$row_count%count($values)];
+			$format_key = $object_key%count($formats);
 
-			$nextY = $this->TableBulk($object, $arg_values);
-			if (!$nextY)
+			foreach ($formats[$format_key] as $key => $val)
 			{
-				$this->drawTableLines($arg_values, $startY);
+				$val = static::tableWordBuffer($val);
+				if ( !isset($val['fields']) ) continue;
+
+				$formats[$format_key][$key]['txt'] = '';
+				foreach($val['fields'] as $field_name)
+				{
+					if (is_object($object) && isset($object->{$field_name}))
+					{
+						$formats[$format_key][$key]['txt'] .= $object->{$field_name};
+					}
+					else if (is_array($object) && isset($object[$field_name]))
+					{
+						$formats[$format_key][$key]['txt'] .= $object[$field_name];
+					}
+					else
+					{
+						$formats[$format_key][$key]['txt'] .= $field_name;
+					}
+				}
+
+				/*
+				// addPage 判定
+				$margins = $this->getMargins();
+				$cellHeight = $this->getStringHeight($val['w'], $formats[$key]['txt']) + $this->getCellMargins()['B'];
+				$h = isset($val['h']) ? $val['h'] : 0;
+				$cellHeight = max($cellHeight, $h);
+
+
+				if (($this->getPageHeight() - $margins['bottom'] - $margins['padding_bottom'] -  $this->getY() - $cellHeight) < 0) {
+					// $pdf->Line($pdf->getX(), $pdf->getY(), $pdf->getX()+$width, $pdf->getY());
+					$is_addPage = true;
+				}
+				 */
+
+			}
+
+			if ($this->is_add_page($formats, $objects, $object_key))
+			{
+				$this->drawTableLines($formats[$format_key], $startY);
 				$this->addPage();
 				$this->setX($startX);
 				$startY = $this->getMargins()['top'];
-				$nextY = $this->TableBulk($object, $arg_values);
 			}
-			$row_count++;
+			$nextY = $this->TableBulk($object, $formats[$format_key], $rowspan_fields);
+
+			foreach ($formats[$format_key] as $key => $val) {
+				if (
+					isset($formats[$format_key][$key]['rowspan']) &&
+					intval($formats[$format_key][$key]['rowspan']) > 0
+				)
+				{
+					$rowspan_fields[$key] = array(
+						'rowspan' => intval($formats[$format_key][$key]['rowspan']) - 1,
+						'w' => $formats[$format_key][$key]['w']
+					);
+				}
+			}
+
+
+			foreach ($rowspan_fields as $rowspan_key => $rowspan_field)
+			{
+				$rowspan_fields[$rowspan_key]['rowspan'] = $rowspan_field['rowspan'] - 1;
+				if ($rowspan_field['rowspan'] < 1) unset($rowspan_fields[$rowspan_key]);
+			}
+
+
 		}
 		$this->setX($startX);
-		$this->drawTableLines($arg_values, $startY, $nextY);
+		$this->drawTableLines(reset($formats), $startY, $nextY);
 		$this->setXY($startX, $nextY);
 	}
 
 	/*
 	 * 縦の線を書くカプセル化 (最左を除く)
 	 */
-	protected function drawTableLines($values, $startY, $endY = null)
+	protected function drawTableLines($formats, $startY, $endY = null)
 	{
 		$total_width = 0;
 		$x = $this->getX();
 		if (is_null($endY)) $endY = $this->getY();
 		$this->Line($x, $startY, $x, $endY);
-		foreach ($values as $val)
+		foreach ($formats as $val)
 		{
 			$val = static::tableWordBuffer($val);
 			$total_width += $val['w']; // todo buffer
@@ -173,56 +240,31 @@ trait Trait_Method
 
 	/*
 	 * Bulk のテーブル用
+	 * 横一列を描画
 	 * @return 次の y 座標, pageBreak を挟むときは false
 	 */
-	protected function TableBulk($object, $values)
+	protected function TableBulk($object, $formats, $rowspan_fields)
 	{
 		$maxY = 0;
 		$is_addPage = false;
 
 		$x = $this->getX();
 
-		foreach ($values as $key => $val)
-		{
-			$val = static::tableWordBuffer($val);
-			if ( !isset($val['fields']) ) continue;
+		$x = $this->getX();
+		$y = $this->getY();
 
-			$values[$key]['txt'] = '';
-			foreach($val['fields'] as $field_name)
-			{
-				if (is_object($object) && isset($object->{$field_name}))
-				{
-					$values[$key]['txt'] .= $object->{$field_name};
-				}
-				else if (is_array($object) && isset($object[$field_name]))
-				{
-					$values[$key]['txt'] .= $object[$field_name];
-				}
-				else
-				{
-					$values[$key]['txt'] .= $field_name;
-				}
-			}
-
-			// addPage 判定
-			$margins = $this->getMargins();
-			$cellHeight = $this->getStringHeight($val['w'], $values[$key]['txt']) + $this->getCellMargins()['B'];
-			$h = isset($val['h']) ? $val['h'] : 0;
-			$cellHeight = max($cellHeight, $h);
-
-
-			if (($this->getPageHeight() - $margins['bottom'] - $margins['padding_bottom'] -  $this->getY() - $cellHeight) < 0) {
-				// $pdf->Line($pdf->getX(), $pdf->getY(), $pdf->getX()+$width, $pdf->getY());
-				$is_addPage = true;
+		// $rowpan_fields があったら空のフィールドを追加してずらす
+		// var_dump($rowspan_fields);
+		if (isset($rowspan_fields)) {
+			foreach ($rowspan_fields as $key => $val) {
+				array_splice($formats, $key, 0, array(array(
+					'border' => false,
+					'w' => $val['w'],
+				)));
 			}
 		}
 
-		// addPage が必要なら描画せずに返す
-		if ($is_addPage) return false;
-
-		$x = $this->getX();
-		$y = $this->getY();
-		foreach ($values as $key => $val)
+		foreach ($formats as $key => $val)
 		{
 			$this->setXY($x, $y);
 			$this->MultiBox($val);
@@ -232,6 +274,88 @@ trait Trait_Method
 		}
 
 		return $maxY;
+	}
+
+	/*
+	 * @return bool
+	 */
+	protected function is_add_page($formats, $objects, $object_key)
+	{
+		$rowspan_max_count = 0; // return に使う
+		$rowspan_count = 1;
+		$current_font_size = $this->getFontSize();
+		$margins = $this->getMargins();
+		$cell_margins = $this->getCellMargins();
+
+		$total_height = 0;
+
+
+		do {
+			$object = $objects[$object_key];
+			$format_key = $object_key%count($formats);
+			$format = $formats[$format_key];
+			$max_cell_height = 0;
+			foreach ($format as $key => $val)
+			{
+				if (
+					isset($format[$key]['rowspan']) &&
+					intval($format[$key]['rowspan']) > 0
+				)
+				{
+					$rowspan_count = max( intval($format[$key]['rowspan']), $rowspan_count);
+				}
+
+				$format[$key]['txt'] = '';
+				foreach($val['fields'] as $field_name)
+				{
+					if (is_object($object) && isset($object->{$field_name}))
+					{
+						$format[$key]['txt'] .= $object->{$field_name};
+					}
+					else if (is_array($object) && isset($object[$field_name]))
+					{
+						$format[$key]['txt'] .= $object[$field_name];
+					}
+					else
+					{
+						$format[$key]['txt'] .= $field_name;
+					}
+				}
+
+				// フォントサイズが違う場合
+				$is_diff_font_size = false;
+				if (isset($format[$key]['font_size']) &&
+					intval($format[$key]['font_size']) > 0 &&
+					$current_font_size != intval($format[$key]['font_size'])
+				)
+				{
+					$is_diff_font_size = true;
+					$this->SetFontSize(intval($format[$key]['font_size']));
+				}
+
+				$cell_height = $this->getStringHeight($format[$key]['w'], $format[$key]['txt']) + $cell_margins['T'] + $cell_margins['B'];
+				$max_cell_height = max($cell_height, $max_cell_height);
+
+				// フォントサイズを戻す
+				if ($is_diff_font_size) $this->SetFontSize($current_font_size);
+			}
+
+
+
+			$total_height += $max_cell_height;
+			$rowspan_count--; // 次ぎに行く前に 残りを減らす
+			$object_key++;
+		} while ($rowspan_count > 0 && isset($objects[$object_key]));
+
+
+		if (($this->getPageHeight() - $margins['bottom'] - $margins['padding_bottom'] -  $this->getY() - $total_height) < 0)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	/*
