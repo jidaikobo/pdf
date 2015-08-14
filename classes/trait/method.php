@@ -13,14 +13,6 @@ trait Trait_Method
 	{
 		foreach ($formats as $key => $format)
 		{
-			$default_paddings = $this->getCellPaddings();
-			$this->setCellPaddings(
-				isset($format['padding_left']  ) ? $format['padding_left']   : $default_paddings['L'],
-				isset($format['padding_top']   ) ? $format['padding_top']    : $default_paddings['T'],
-				isset($format['padding_right'] ) ? $format['padding_right']  : $default_paddings['R'],
-				isset($format['padding_bottom']) ? $format['padding_bottom'] : $default_paddings['B']
-			);
-
 			if ( !isset($format['fields']) ) continue;
 
 			$format['txt'] = '';
@@ -62,41 +54,9 @@ trait Trait_Method
 				{
 					$format['txt'] .= $field_name;
 				}
-
-				if (isset($format['ln_y']))
-				{
-					if ($format['ln_y'])
-					{
-						$format['y'] = $this->getY()+$format['margin_top'];
-					}
-					else
-					{
-						$format['y'] += $format['margin_top'];
-				}
-				}
-
-				if (isset($format['font_family']))
-				{
-					if ($format['font_family'] == 'G')
-					{
-						$this->setFont('kozgopromedium');
-					}
-					else
-					{
-						$this->setFont('kozminproregular');
-					}
-				}
 			}
 
 			$this->MultiBox($format);
-
-			// padding 戻し
-			$this->setCellPaddings(
-				$default_paddings['L'],
-				$default_paddings['T'],
-				$default_paddings['R'],
-				$default_paddings['B']
-			);
 		}
 	}
 

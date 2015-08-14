@@ -173,6 +173,16 @@ trait Trait_Wrapper
 
 		$options = array_merge($defaults, $options);
 
+		// テキストがない場合は 高さを 0 に
+		if (
+			$options['txt'] == '' &&
+			$options['h'] == 0 &&
+			$options['maxh'] == 0
+		) {
+			$default_font_size = $pdf->getFontSize();
+			$this->SetFontSize(0);
+		}
+
 		return $pdf->MultiCell(
 			$options['w'],
 			$options['h'],
@@ -191,6 +201,15 @@ trait Trait_Wrapper
 			$options['valign'],
 			$options['fitcell']
 		);
+
+		// テキストがない場合は 高さを 0 にを戻す
+		if (
+			$options['txt'] == '' &&
+			$options['h'] == 0 &&
+			$options['maxh'] == 0
+		) {
+			$this->SetFontSize($default_font_size);
+		}
 	}
 
 	/*

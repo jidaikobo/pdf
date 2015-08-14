@@ -336,5 +336,17 @@ class Pdf
 		}
 	}
 
+	/*
+	 * 日本語に対応させる為
+	 * TCPDF 本体のコアハックもしている
+	 * 入れ替えの際は注意
+	 */
+	public function Output($name='doc.pdf', $dest='I')
+	{
+		if (substr($name, -4) != '.pdf') $name = $name .= '.pdf';
+		$pdf = static::$_pdf;
+		$pdf->Output($name, $dest);
+	}
+
 
 }
