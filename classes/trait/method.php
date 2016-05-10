@@ -153,7 +153,8 @@ trait Trait_Method
 			}
 			$nextY = $this->TableBulk($object, $formats[$format_key], $rowspan_fields);
 
-			foreach ($formats[$format_key] as $key => $val) {
+			foreach ($formats[$format_key] as $key => $val)
+			{
 				if (
 					isset($formats[$format_key][$key]['rowspan']) &&
 					intval($formats[$format_key][$key]['rowspan']) > 0

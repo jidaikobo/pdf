@@ -183,7 +183,17 @@ trait Trait_Wrapper
 			$this->SetFontSize(0);
 		}
 
-		return $pdf->MultiCell(
+
+		$default_paddings = $pdf->getCellPaddings();
+		// padding
+		$pdf->setCellPaddings(
+			isset($options['padding_left']  ) ? $options['padding_left']   : $default_paddings['L'],
+			isset($options['padding_top']   ) ? $options['padding_top']    : $default_paddings['T'],
+			isset($options['padding_right'] ) ? $options['padding_right']  : $default_paddings['R'],
+			isset($options['padding_bottom']) ? $options['padding_bottom'] : $default_paddings['B']
+		);
+
+		$pdf->MultiCell(
 			$options['w'],
 			$options['h'],
 			$options['txt'],
@@ -210,6 +220,16 @@ trait Trait_Wrapper
 		) {
 			$this->SetFontSize($default_font_size);
 		}
+
+
+		// padding 戻し
+		$pdf->setCellPaddings(
+			$default_paddings['L'],
+			$default_paddings['T'],
+			$default_paddings['R'],
+			$default_paddings['B']
+		);
+
 	}
 
 	/*
@@ -219,26 +239,26 @@ trait Trait_Wrapper
 	{
 		// key to val
 		$buffers = array(
-			'size' => 'font_size',
-			'fontsize' => 'font_size',
-			'fontSize' => 'font_size',
-			'width' => 'w',
-			'height' => 'h',
-			'text' => 'txt',
-			'max_height' => 'maxh',
-			'maxheight' => 'maxh',
-			'maxHeight' => 'maxh',
-			'cell_align' => 'calign',
-			'cellalign' => 'calign',
-			'cellAlign' => 'calign',
+			'size'           => 'font_size',
+			'fontsize'       => 'font_size',
+			'fontSize'       => 'font_size',
+			'width'          => 'w',
+			'height'         => 'h',
+			'text'           => 'txt',
+			'max_height'     => 'maxh',
+			'maxheight'      => 'maxh',
+			'maxHeight'      => 'maxh',
+			'cell_align'     => 'calign',
+			'cellalign'      => 'calign',
+			'cellAlign'      => 'calign',
 			'vertical_align' => 'valign',
-			'verticalalign' => 'valign',
-			'verticalAlign' => 'valign',
-			'fit_cell' => 'fitcell',
-			'fitcell' => 'fitcell',
-			'fitCell' => 'fitcell',
-			'fill_color' => 'fillcolor',
-			'fillColor' => 'fillcolor',
+			'verticalalign'  => 'valign',
+			'verticalAlign'  => 'valign',
+			'fit_cell'       => 'fitcell',
+			'fitcell'        => 'fitcell',
+			'fitCell'        => 'fitcell',
+			'fill_color'     => 'fillcolor',
+			'fillColor'      => 'fillcolor',
 		);
 
 		foreach ($buffers as $key => $val)
