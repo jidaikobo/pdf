@@ -1,0 +1,17 @@
+{
+	"name": "jidaikobo/pdf",
+	"description": "package of fuelPHP",
+	"type": "fuel-package",
+	"require": {
+	},
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "jidaikobo",
+			"email": "info@jidaikobo.com"
+		}
+	],
+	"minimum-stability": "stable",
+	"version": "1.0.0"
+}
+
